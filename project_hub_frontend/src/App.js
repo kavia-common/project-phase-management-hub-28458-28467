@@ -1,48 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import './index.css';
+import { Header } from './layout/Header';
+import { Sidebar } from './layout/Sidebar';
+import { Dashboard } from './pages/Dashboard';
+import { PhasePage } from './pages/PhasePage';
+import { useLocalPhases } from './hooks/useLocalPhases';
+import { AppRouter } from './router/Router';
+import { PHASES } from './utils/constants';
+import { ThemeProvider } from './theme';
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * App
+ * The root component providing the application shell with header, sidebar, router view,
+ * and shared state providers. Uses a lightweight router based on internal state
+ * persisted to localStorage (no external routing libs).
+ */
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const { view, setView, params } = AppRouter.useRouteState();
+  const { phases, addItem, updateItem, removeItem, stats } = useLocalPhases();
 
-  // Effect to apply theme to document element
+  // Persist sidebar collapsed state
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    const saved = localStorage.getItem('app.sidebarCollapsed');
+    if (saved) setCollapsed(saved === 'true');
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('app.sidebarCollapsed', String(collapsed));
+  }, [collapsed]);
 
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  // Memoized current phase info
+  const currentPhase = useMemo(() => {
+    if (view !== 'phase') return null;
+    const id = params?.phaseId ?? 0;
+    return PHASES.find(p => p.id === Number(id));
+  }, [view, params]);
+
+  const onNavigate = (nextView, nextParams) => {
+    setView(nextView, nextParams);
+    setSidebarOpen(false);
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider>
+      <div className={`app-shell ${collapsed ? 'collapsed' : ''}`}>
+        <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <Sidebar
+            collapsed={collapsed}
+            onToggleCollapse={() => setCollapsed(v => !v)}
+            activeView={view}
+            activePhaseId={params?.phaseId}
+            onNavigate={onNavigate}
+            stats={stats}
+          />
+        </aside>
+
+        <header className="app-header">
+          <Header
+            title={view === 'dashboard' ? 'Project Hub Dashboard' : currentPhase?.name || 'Phase'}
+            subtitle={view === 'dashboard' ? 'Overview and quick insights' : currentPhase?.description}
+            onMenuToggle={() => setSidebarOpen(o => !o)}
+            onNavigate={onNavigate}
+            isPhaseView={view === 'phase'}
+          />
+        </header>
+
+        <main className="app-main">
+          {view === 'dashboard' && (
+            <Dashboard
+              stats={stats}
+              onOpenPhase={(phaseId) => onNavigate('phase', { phaseId })}
+            />
+          )}
+          {view === 'phase' && currentPhase && (
+            <PhasePage
+              phase={currentPhase}
+              items={phases[currentPhase.id] || []}
+              onAdd={(payload) => addItem(currentPhase.id, payload)}
+              onUpdate={(itemId, updates) => updateItem(currentPhase.id, itemId, updates)}
+              onDelete={(itemId) => removeItem(currentPhase.id, itemId)}
+              onBack={() => onNavigate('dashboard')}
+            />
+          )}
+        </main>
+      </div>
+    </ThemeProvider>
   );
 }
 

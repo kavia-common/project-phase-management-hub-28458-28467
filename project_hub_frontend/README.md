@@ -1,82 +1,68 @@
-# Lightweight React Template for KAVIA
+# Project Hub Frontend (Ocean Professional)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A lightweight React app for managing project phases (0–3) with a modern Ocean Professional theme. No external routing libraries or UI frameworks.
 
 ## Features
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Left sidebar, top header, main content area
+- Dashboard with overview cards per phase and quick navigation
+- Phase pages (0–3) with localStorage-backed CRUD-lite
+- Inline editing of title, description, and status
+- Lightweight internal router with last view remembered
+- Responsive layout: collapsible sidebar, mobile drawer behavior
+- Smooth transitions, focus states, rounded corners, subtle gradients
+- No new external dependencies (runs on CRA)
 
-## Getting Started
+## Run
 
-In the project directory, you can run:
+- npm start
+- App runs at http://localhost:3000
 
-### `npm start`
+## Structure
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- src/theme.js: Minimal ThemeProvider and hook
+- src/router/Router.js: Internal view state ("dashboard" | "phase")
+- src/hooks/useLocalPhases.js: LocalStorage CRUD for items
+- src/utils/constants.js: Phase metadata (0–3)
+- src/utils/storage.js: LocalStorage wrapper
+- src/layout/Header.js: Top bar with actions
+- src/layout/Sidebar.js: Navigation sidebar with collapse
+- src/pages/Dashboard.js: Overview grid with PhaseCard tiles
+- src/pages/PhasePage.js: Form + editable list per phase
+- src/components/PhaseCard.js: Phase overview card
+- src/components/PhaseForm.js: Create form
+- src/components/PhaseList.js: Editable list row
 
-### `npm test`
+## Theme
 
-Launches the test runner in interactive watch mode.
+Ocean Professional palette is defined using CSS variables in src/index.css:
 
-### `npm run build`
+- Primary: #2563EB
+- Secondary/Success: #F59E0B
+- Error: #EF4444
+- Background: #f9fafb
+- Surface: #ffffff
+- Text: #111827
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Gradients and shadows are applied for subtle depth. See src/App.css and src/index.css for utility classes and layout shell.
 
-## Customization
+## Accessibility
 
-### Colors
+- Focus-visible ring via CSS variables
+- Button labels and aria-current for navigation
+- Mobile sidebar toggle
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+## Data Model
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
+LocalStorage key prefix: projecthub
 
-### Components
+- projecthub.phases: { [phaseId]: Array<{ id, title, description, status, createdAt }> }
+- projecthub.route.view: 'dashboard' | 'phase'
+- projecthub.route.params: { phaseId?: number }
+- app.sidebarCollapsed: boolean
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+## Notes
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+- No external routing. Internal navigation is handled by AppRouter and persisted.
+- Safe to reset data by clearing LocalStorage for prefix "projecthub".
 
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
